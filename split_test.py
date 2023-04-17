@@ -15,7 +15,7 @@ import tkinter as tk
 from tkinter import filedialog
 import xml.etree.ElementTree as ET
 
-
+#########################################################################
 
 # Create GUI to get file
 
@@ -134,28 +134,37 @@ def main():
 
 
 #for large bond force
-   #split parameters
+
+#code to get below parameters using yaml file
+   #with open('config.yaml') as file:
+   #    # The FullLoader parameter handles the conversion from YAML
+   #    # scalar values to Python the dictionary format
+   #    config = yaml.load(file, Loader=yaml.FullLoader)
+   #    print(config)
+
+
+   #splitCondition
    channelmode = 'GMP_OCA_PORT_20'
    splitmode = 2
    splitAtEnd=False
 
-   # data collect before and after the switch
+   #data_range
    ahead = 50  #ms
    behind = 100   #ms
 
-   #condition parameters
+   #condition
    conditionExist = False
    conditionalChannel = 'CMD_POS_BHG2_Z'
    conditionValue = '<-70000'
 
-   #conversion parameters
+   #conversion
    requireConversion=False
    conversionChannel= 'WH_ADC_PORT_WAFERCOOLINGFLOWSNR_R'
    newChannelName = 'Cap sense (V)'
    formula = '*10/32767'
    two_complement=True
 
-   #plot parameters
+   #plotChannel
    plotlist=['ENC_POS_BHG2_Z','DAC_BHG2_Z','ENC_POS_BHG2_BF_VCM','GMP_OCA_PORT_20']
 
 
