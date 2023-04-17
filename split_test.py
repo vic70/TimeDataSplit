@@ -13,7 +13,8 @@ import os
 #import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import filedialog
-import xml.etree.ElementTree as ET
+# import xml.etree.ElementTree as ET
+import yaml
 
 #########################################################################
 
@@ -96,16 +97,22 @@ def modifyData(df, column, formula, two_complement=False):
    return df.new
 
 
-# #function to read the below parameters from a file in xml format 
-# def readxml():
-#    filepath, filelocation, filename = getfile(title= "Select XML config",filetypes = [(("xml files","*.xml"))])
-#    print(filepath)
-#    tree = ET.parse(filepath)
-#    return tree
-#    # for child in root:
-#    #    print(child.tag, child.attrib)
-#    #    for subchild in child:
-#    #       print(subchild.tag, subchild.attrib)
+#function to read the below parameters from a file in yml format 
+def readyml():
+   filepath, filelocation, filename = getfile(title= "Select yml config",filetypes = [(("yuml files","*.yml"))])
+   #print(filepath)
+   
+   with open(filepath, 'r') as file:
+      configData = yaml.safe_load(file)
+   
+   return configData
+
+
+   return tree
+   # for child in root:
+   #    print(child.tag, child.attrib)
+   #    for subchild in child:
+   #       print(subchild.tag, subchild.attrib)
 
 
 
@@ -143,30 +150,53 @@ def main():
    #    print(config)
 
 
-   #splitCondition
-   channelmode = 'GMP_OCA_PORT_20'
-   splitmode = 2
-   splitAtEnd=False
+   configData = readyml()
+   
+   # Assign values to variables
+   channelmode = configData['splitCondition']['channelmode']
+   splitmode = configData['splitCondition']['splitmode']
+   splitAtEnd = configData['splitCondition']['splitAtEnd']
 
-   #data_range
-   ahead = 50  #ms
-   behind = 100   #ms
+   ahead = configData['data_range']['ahead']
+   behind = configData['data_range']['behind']
 
-   #condition
-   conditionExist = False
-   conditionalChannel = 'CMD_POS_BHG2_Z'
-   conditionValue = '<-70000'
+   conditionExist = configData['condition']['conditionExist']
+   conditionalChannel = configData['condition']['conditionalChannel']
+   conditionValue = configData['condition']['conditionValue']
 
-   #conversion
-   requireConversion=False
-   conversionChannel= 'WH_ADC_PORT_WAFERCOOLINGFLOWSNR_R'
-   newChannelName = 'Cap sense (V)'
-   formula = '*10/32767'
-   two_complement=True
+   requireConversion = configData['conversion']['requireConversion']
+   conversionChannel = configData['conversion']['conversionChannel']
+   newChannelName = configData['conversion']['newChannelName']
+   formula = configData['conversion']['formula']
+   two_complement = configData['conversion']['two_complement']
 
-   #plotChannel
-   plotlist=['ENC_POS_BHG2_Z','DAC_BHG2_Z','ENC_POS_BHG2_BF_VCM','GMP_OCA_PORT_20']
+   plotlist = configData['plotChannel']['plotlist']
 
+# """
+#    #splitCondition
+#    channelmode = 'GMP_OCA_PORT_20'
+#    splitmode = 2
+#    splitAtEnd=False
+
+#    #data_range
+#    ahead = 50  #ms
+#    behind = 100   #ms
+
+#    #condition
+#    conditionExist = False
+#    conditionalChannel = 'CMD_POS_BHG2_Z'
+#    conditionValue = '<-70000'
+
+#    #conversion
+#    requireConversion=False
+#    conversionChannel= 'WH_ADC_PORT_WAFERCOOLINGFLOWSNR_R'
+#    newChannelName = 'Cap sense (V)'
+#    formula = '*10/32767'
+#    two_complement=True
+
+#    #plotChannel
+#    plotlist=['ENC_POS_BHG2_Z','DAC_BHG2_Z','ENC_POS_BHG2_BF_VCM','GMP_OCA_PORT_20']
+# """
 
 # '''
 # #for cap sense
