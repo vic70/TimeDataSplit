@@ -1,0 +1,13 @@
+home:
+  numbers: 3
+  closeToOffice: true
+  pets:
+  - dog
+  - cat
+  - cat
+office:
+  numbers: 3
+  pets:
+  - fish
+  - crab
+  - shrimp

@@ -1,0 +1,92 @@
+import xml.etree.ElementTree as ET
+import tkinter as tk
+from tkinter import filedialog
+
+# Create a Tkinter window
+window = tk.Tk()
+
+# Hide the main window
+window.withdraw()
+
+# Open a file dialog to select the XML file
+file_path = filedialog.askopenfilename(title="Select XML file", filetypes=[("XML files", "*.xml")])
+
+# Show the main window again
+window.deiconify()
+
+# Parse the XML file and get the root element
+tree = ET.parse(file_path)
+root = tree.getroot()
+
+# Extract the values of a and b from the XML file
+# a = int(tree.find('a').text)
+# b = int(tree.find('b').text)
+
+# for a_elem in root.findall('a'):
+#     a_values = a_elem.findall('a*')
+#     print(a_values)
+
+# Compute the sum of a and b
+# sum_ab = a + b
+
+# Print out the result
+#print(f"The sum of {a} and {b} is {sum_ab}.")
+
+
+# Find all <a> elements and sum up their values
+total_a = 0
+
+# get all the child elements under <a>
+#a_children = root.find('a').iter()
+a_children = [child.text for child in root.find('a').iter() if child.text and not child.text.isspace()]
+print(a_children)
+
+
+# initialize a sum variable
+sum_a = 0
+
+for child in a_children:
+    sum_a += int(child)
+
+
+# iterate over the child elements and add their values to the sum variable
+# for child in a_children:
+#     #sum_a += int(child.text)
+#     i=1
+#     print(f'{i}:{child.text}')
+#     i+=1
+
+# Get the value of <b>
+b_value = int(root.find('b').text)
+
+# Compute a1 - a2 + b
+result = total_a - b_value
+
+# get the formula string
+formula_str = root.find('formula').text
+
+# Print the result
+print(result)
+print(eval('result'+formula_str))
+
+# Find all <a> elements and print out their values
+for a_elem in root.findall('a'):
+    a1 = a_elem.find('a1').text
+    a2 = a_elem.find('a2').text
+    print(f"<a>: a1={a1}, a2={a2}")
+
+
+
+
+
+<?xml version="1.0"?>
+<values>
+  <a>
+    <a1>1</a1>
+    <a2>2</a2></a>
+  <b>20</b>
+
+    <formula> > 5</formula>
+
+</values>
+
