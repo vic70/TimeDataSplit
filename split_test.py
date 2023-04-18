@@ -118,6 +118,9 @@ def readyml():
 
 def main():
 
+
+   configData = readyml()
+
    # tree = readxml()
 
    filepath, filelocation, filename = getfile()
@@ -150,7 +153,6 @@ def main():
    #    print(config)
 
 
-   configData = readyml()
    
    # Assign values to variables
    channelmode = configData['splitCondition']['channelmode']
