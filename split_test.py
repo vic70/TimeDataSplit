@@ -99,7 +99,7 @@ def modifyData(df, column, formula, two_complement=False):
 
 #function to read the below parameters from a file in yml format 
 def readyml():
-   filepath, filelocation, filename = getfile(title= "Select yml config",filetypes = [(("yuml files","*.yml"))])
+   filepath, filelocation, filename = getfile(title= "Select yml config",filetypes = [(("yaml file","*.yml"))])
    #print(filepath)
    
    with open(filepath, 'r') as file:
@@ -173,75 +173,7 @@ def main():
    two_complement = configData['conversion']['two_complement']
 
    plotlist = configData['plotChannel']['plotlist']
-
-# """
-#    #splitCondition
-#    channelmode = 'GMP_OCA_PORT_20'
-#    splitmode = 2
-#    splitAtEnd=False
-
-#    #data_range
-#    ahead = 50  #ms
-#    behind = 100   #ms
-
-#    #condition
-#    conditionExist = False
-#    conditionalChannel = 'CMD_POS_BHG2_Z'
-#    conditionValue = '<-70000'
-
-#    #conversion
-#    requireConversion=False
-#    conversionChannel= 'WH_ADC_PORT_WAFERCOOLINGFLOWSNR_R'
-#    newChannelName = 'Cap sense (V)'
-#    formula = '*10/32767'
-#    two_complement=True
-
-#    #plotChannel
-#    plotlist=['ENC_POS_BHG2_Z','DAC_BHG2_Z','ENC_POS_BHG2_BF_VCM','GMP_OCA_PORT_20']
-# """
-
-# '''
-# #for cap sense
-#    #split parameters
-#    channelmode = 'MODE_DP_LZ'
-#    splitmode = '1f010001'
-#    splitAtEnd=True
-
-#    #condition parameters
-#    conditionExist = False
-#    conditionalChannel = 'CMD_POS_BHG2_Z'
-#    conditionValue = '<-70000'
-
-#    #conversion parameters
-#    requireConversion=True
-#    conversionChannel= 'WH_ADC_PORT_WAFERCOOLINGFLOWSNR_R'
-#    newChannelName = 'Cap sense (V)'
-#    formula = '*10/32767'
-#    two_complement=True
-
-#    #plot parameters
-#    plotlist=['MODE_DP_LY','CMD_POS_DP_LZ','ENC_POS_DP_LZ','Cap sense (V)']
-
-# '''
    
-# '''
-#    For BHZ laser
-
-#    channelmode = 'MODE_BHG2_Z'
-#    splitmode = 'ff010001'
-#    conditionalChannel = 'CMD_POS_BHG2_Z'
-#    conditionValue = '<-70000'
-#    plotlist=['CMD_POS_BHG2_Z','Laser (um)']
-#    conversionChannel= 'EJ_ADC_PORT_VAC'
-#    newChannelName = 'Laser (um)'
-#    formula = '*0.03063'
-#    splitAtEnd=True
-#    conditionExist=True
-  
-# '''
-
-
-   #print(df['EJ_ADC_PORT_VAC'].dtype)
 
    if requireConversion:
       df[newChannelName] = modifyData(df, conversionChannel, formula, two_complement)
