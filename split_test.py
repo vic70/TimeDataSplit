@@ -4,20 +4,15 @@ Last Modified 2023-4-20
 @author: Victor
 """
 
-import math
 import numpy as np
 import pandas as pd
-import glob
 import os
 import tkinter as tk
 from tkinter import filedialog
 import yaml
 
-#########################################################################
-
 # Create GUI to get file
-
-def getfile(title= "Select file",filetypes = [(("all files","*.*"))], existpath='', batchProcess = False):
+def getfile(title= "Select file",filetypes = [(("all files","*.*"))], existpath='', batchProcess = False, batchFileType='.dat'):
    root = tk.Tk()
    if not batchProcess:
       if existpath == '':
@@ -31,7 +26,15 @@ def getfile(title= "Select file",filetypes = [(("all files","*.*"))], existpath=
       return filepath, filelocation, filename  
    else:
       root.title("Select Folder")
-      filepath = filedialog.askdirectory(initialdir = "__FILE__" ,title = title)
+      folderpath = filedialog.askdirectory(initialdir = "__FILE__" ,title = title)
+      # Get list of files with selected suffix in the selected folder
+      file_list = []
+      for dirpath, dirnames, filenames in os.walk(folderpath):
+         for filename in filenames:
+               if filename.endswith(batchFileType):
+                  file_list.append(os.path.join(dirpath, filename))
+      root.destroy()
+      return folderpath, file_list
    
 
 # find the interval to be split

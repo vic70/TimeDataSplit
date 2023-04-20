@@ -1,0 +1,230 @@
+#OOP
+
+import pandas as pd
+
+class Config:
+    def __init__(self, config_file):
+        self.configData = self.readyml(config_file)
+
+    def readyml(self, config_file):
+        # Load YAML config data from config_file
+        # Implement the logic to read and parse YAML config file here
+        return config_data
+
+class FileProcessor:
+    def __init__(self, file_path, config):
+        self.file_path = file_path
+        self.config = config
+
+    def process_file(self):
+        df = pd.read_table(self.file_path, low_memory=False)
+        channelmode = self.config['splitCondition']['channelmode']
+        splitmode = self.config['splitCondition']['splitmode']
+        splitAtEnd = self.config['splitCondition']['splitAtEnd']
+        ahead = self.config['data_range']['ahead']
+        behind = self.config['data_range']['behind']
+        conditionExist = self.config['condition']['conditionExist']
+        conditionalChannel = self.config['condition']['conditionalChannel']
+        conditionValue = self.config['condition']['conditionValue']
+        requireConversion = self.config['conversion']['requireConversion']
+        conversionChannel = self.config['conversion']['conversionChannel']
+        newChannelName = self.config['conversion']['newChannelName']
+        formula = self.config['conversion']['formula']
+        two_complement = self.config['conversion']['two_complement']
+        plotlist = self.config['plotChannel']['plotlist']
+        batchProcess = False
+        if 'batchProcess' in self.config['batch']:
+            batchProcess = self.config['batch']['batchProcess']
+            batchFileType = self.config['batch']['batchFileType']
+
+        if requireConversion:
+            df[newChannelName] = modifyData(df, conversionChannel, formula, two_complement)
+
+        switchtimes = split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd, conditionExist)
+        finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
+        file_location, file_name = self.get_file_location_and_name()
+        finalTable.to_csv(file_location + '\\' + file_name[:-4] + '_split.csv', index=False)
+
+    def get_file_location_and_name(self):
+        # Implement the logic to get file location and name from self.file_path here
+        return file_location, file_name
+
+def main():
+    config_file = 'config.yml'  # Update with the path to your config file
+    config = Config(config_file)
+
+    file_list = ['file1.txt', 'file2.txt', 'file3.txt']  # Update with your list of file paths
+    for file_path in file_list:
+        file_processor = FileProcessor(file_path, config.configData)
+        file_processor.process_file()
+
+if __name__ == '__main__':
+    main()
+
+
+
+#GUI
+
+import tkinter as tk
+from tkinter import filedialog
+import pandas as pd
+
+class Config:
+    def __init__(self):
+        self.configData = None
+
+    def load_config(self, file_path):
+        # Load YAML config data from file_path
+        # Implement the logic to read and parse YAML config file here
+        self.configData = config_data
+
+class FileProcessor:
+    def __init__(self, file_path, config):
+        self.file_path = file_path
+        self.config = config
+
+    def process_file(self):
+        df = pd.read_table(self.file_path, low_memory=False)
+        # Perform the file processing operations here using the config data
+        # ...
+
+class App:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("File Processor")
+        self.config = Config()
+
+        # Create buttons
+        self.load_config_btn = tk.Button(self.master, text="Load Config", command=self.load_config)
+        self.load_config_btn.pack(pady=10)
+        self.select_file_or_folder_btn = tk.Button(self.master, text="Select File/Folder", command=self.select_file_or_folder)
+        self.select_file_or_folder_btn.pack(pady=10)
+        self.execute_btn = tk.Button(self.master, text="Execute", command=self.execute_file_processor, state=tk.DISABLED)
+        self.execute_btn.pack(pady=10)
+
+        # Create label to display loaded file name
+        self.loaded_file_label = tk.Label(self.master, text="")
+        self.loaded_file_label.pack(pady=10)
+
+    def load_config(self):
+        file_path = filedialog.askopenfilename(filetypes=[("YAML files", "*.yml;*.yaml")])
+        if file_path:
+            self.config.load_config(file_path)
+            self.loaded_file_label.configure(text="Loaded Config: " + file_path)
+
+    def select_file_or_folder(self):
+        file_path = ""
+        file_type = ""
+        if self.config.configData is not None:
+            file_type = self.config.configData['batch']['batchFileType']
+        if file_type:
+            file_type = f"*.{file_type}"
+        else:
+            file_type = "*.*"
+        if self.config.configData is not None and self.config.configData['batch']['batchProcess']:
+            file_path = filedialog.askdirectory()
+        else:
+            file_path = filedialog.askopenfilename(filetypes=[("Data files", file_type)])
+
+        if file_path:
+            self.file_path = file_path
+            self.execute_btn.configure(state=tk.NORMAL)
+
+    def execute_file_processor(self):
+        file_processor = FileProcessor(self.file_path, self.config.configData)
+        file_processor.process_file()
+        self.execute_btn.configure(state=tk.DISABLED)
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()
+
+#######################################
+##Further separation
+import tkinter as tk
+from tkinter import filedialog
+import pandas as pd
+
+class Config:
+    def __init__(self):
+        self.configData = None
+
+    def load_config(self, file_path):
+        # Load YAML config data from file_path
+        # Implement the logic to read and parse YAML config file here
+        self.configData = config_data
+
+class FileProcessor:
+    def __init__(self, file_path, config):
+        self.file_path = file_path
+        self.config = config
+
+    def load_config(self, file_path):
+        self.config.load_config(file_path)
+
+    def process_data(self):
+        df = pd.read_table(self.file_path, low_memory=False)
+        # Perform the data processing operations here using the config data
+        # ...
+        return processed_data
+
+    def save_result(self, processed_data):
+        # Save the processed data to the desired location
+        # ...
+        pass
+
+class App:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("File Processor")
+        self.config = Config()
+        self.file_processor = None
+
+        # Create buttons
+        self.load_config_btn = tk.Button(self.master, text="Load Config", command=self.load_config)
+        self.load_config_btn.pack(pady=10)
+        self.select_file_or_folder_btn = tk.Button(self.master, text="Select File/Folder", command=self.select_file_or_folder)
+        self.select_file_or_folder_btn.pack(pady=10)
+        self.execute_btn = tk.Button(self.master, text="Execute", command=self.execute_file_processor, state=tk.DISABLED)
+        self.execute_btn.pack(pady=10)
+
+        # Create label to display loaded file name
+        self.loaded_file_label = tk.Label(self.master, text="")
+        self.loaded_file_label.pack(pady=10)
+
+    def load_config(self):
+        file_path = filedialog.askopenfilename(filetypes=[("YAML files", "*.yml;*.yaml")])
+        if file_path:
+            self.file_processor.load_config(file_path)
+            self.loaded_file_label.configure(text="Loaded Config: " + file_path)
+
+    def select_file_or_folder(self):
+        file_path = ""
+        file_type = ""
+        if self.config.configData is not None:
+            file_type = self.config.configData['batch']['batchFileType']
+        if file_type:
+            file_type = f"*.{file_type}"
+        else:
+            file_type = "*.*"
+        if self.config.configData is not None and self.config.configData['batch']['batchProcess']:
+            file_path = filedialog.askdirectory()
+        else:
+            file_path = filedialog.askopenfilename(filetypes=[("Data files", file_type)])
+
+        if file_path:
+            self.file_path = file_path
+            self.execute_btn.configure(state=tk.NORMAL)
+
+    def execute_file_processor(self):
+        self.file_processor = FileProcessor(self.file_path, self.config.configData)
+        processed_data = self.file_processor.process_data()
+        self.file_processor.save_result(processed_data)
+        self.execute_btn.configure(state=tk.DISABLED)
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()
+
