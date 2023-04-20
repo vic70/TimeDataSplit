@@ -1,0 +1,32 @@
+# This section defines the split condition for the data
+splitCondition:
+  channelmode: GMP_OCA_PORT_20 # The channel mode for splitting the data
+  splitmode: 2  # The channel mode's particular mode for the data splitting
+  splitAtEnd: false  # Whether to split the data at the end or the start of the splitmode
+
+# This section defines the range of data to be analyzed
+data_range:
+  ahead: 50  # The amount of time to analyze ahead of the trigger (in ms)
+  behind: 200   # The amount of time to analyze behind the trigger (in ms)
+
+# This section defines any conditional filtering for the data
+condition:
+  conditionExist: false  # Whether to apply a conditional filter to the data
+  conditionalChannel: CMD_POS_BHG2_Z  # The channel to use for the conditional filter
+  conditionValue: '<-70000'  # Only consider to split signal if split mode match AND conditional channel match the value
+
+# This section defines any data conversion that needs to be applied
+conversion:
+  requireConversion: false  # Whether to apply a data conversion
+  conversionChannel: WH_ADC_PORT_WAFERCOOLINGFLOWSNR_R  # The channel to convert
+  newChannelName: Cap sense (V)  # The name of the new channel after conversion
+  formula: '*10/32767'  # The formula to use for the conversion
+  two_complement: true  # Whether to use two's complement for the conversion, suitable for ADC logging 
+
+# This section defines the channels to plot
+plotChannel:
+  plotlist:
+    - ENC_POS_BHG2_Z
+    - DAC_BHG2_Z
+    - ENC_POS_BHG2_BF_VCM
+    - GMP_OCA_PORT_20
