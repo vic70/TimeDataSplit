@@ -97,6 +97,9 @@ def readyml():
       configData = yaml.safe_load(file)
    return configData
 
+def convertRes(factor):
+   pass
+
 def main():
    configData = readyml()
 
@@ -121,9 +124,13 @@ def main():
    two_complement = configData['conversion']['two_complement']
 
    plotlist = configData['plotChannel']['plotlist']
+
    multiFileSupport = configData['multiFileSupport']['Input']
 
-
+   Func = configData['function']['requireFunc']
+   Func = configData['function']['applyChName']
+   Func = configData['function']['newChName']
+   Func = configData['function']['funcs']
 
    filepath, filelocation, filename = getfile(multiFileSupport)
    for i in range(len(filepath)):
@@ -131,6 +138,10 @@ def main():
 
       if requireConversion:
          df[newChannelName] = modifyData(df, conversionChannel, formula, two_complement)
+
+      if Func:
+         pass
+
 
       switchtimes= split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd, conditionExist)
       finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)

@@ -10,7 +10,7 @@ splitCondition:
 
 # This section defines the range of data to be analyzed
 data_range:
-  ahead: 50  # The amount of time to analyze ahead of the trigger (in ms)
+  ahead: 100  # The amount of time to analyze ahead of the trigger (in ms)
   behind: 200   # The amount of time to analyze behind the trigger (in ms)
 
 # This section defines any conditional filtering for the data
@@ -27,10 +27,29 @@ conversion:
   formula: '*10/32767'  # The formula to use for the conversion
   two_complement: true  # Whether to use two's complement for the conversion, suitable for ADC logging 
 
+function:
+  requireFunc: True
+  applyChName:
+    - BHG2_ADC_PORT_BF_CAL
+    - ENC_POS_BHG2_Z
+    - ENC_POS_BHG2_BF_VCM
+  newChName:
+    - BHG2_ADC_PORT_BF_CAL
+    - ENC_POS_BHG2_Z
+    - ENC_POS_BHG2_BF_VCM
+  funcs:
+    - two_complement
+    - k
+    - l
+
 # This section defines the channels to plot
 plotChannel:
   plotlist:
     - ENC_POS_BHG2_Z
     - DAC_BHG2_Z
     - ENC_POS_BHG2_BF_VCM
+    - BHG2_ADC_PORT_BF_CAL
     - GMP_OCA_PORT_20
+    - GMP_OCA_PORT_27
+    - GMP_OCA_PORT_28
+    - DAC_BHG2_BF_VCM
