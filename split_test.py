@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import glob
 import os
+import CommonUtil
 #import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import filedialog
@@ -75,9 +76,6 @@ def mergeTable(df, switchtimes, ahead, behind, plotlist):
    return tableMerge
 
 # convert 2 complement value in decimal to decimal with sign
-def twos_complement(input_value, num_bits):
-      mask = 2**(num_bits - 1)
-      return -(input_value & mask) + (input_value & ~mask)
 
 # function to modify data by adding a column by modifying the existing column with a fomula input in text
 def modifyData(df, column, formula, two_complement=False):
@@ -97,8 +95,10 @@ def readyml():
       configData = yaml.safe_load(file)
    return configData
 
-def convertRes(factor):
-   pass
+
+def convertRes(input, Res = 0.5):
+   Out = input * Res
+   return Out
 
 def main():
    configData = readyml()
@@ -127,10 +127,11 @@ def main():
 
    multiFileSupport = configData['multiFileSupport']['Input']
 
-   Func = configData['function']['requireFunc']
-   Func = configData['function']['applyChName']
-   Func = configData['function']['newChName']
-   Func = configData['function']['funcs']
+   requireFunc = configData['function']['requireFunc']
+   applyChName = configData['function']['applyChName']
+   newChName = configData['function']['newChName']
+   funcs = configData['function']['funcs']
+   funcsInputs = configData['function']['funcsInput']
 
    filepath, filelocation, filename = getfile(multiFileSupport)
    for i in range(len(filepath)):
@@ -139,9 +140,12 @@ def main():
       if requireConversion:
          df[newChannelName] = modifyData(df, conversionChannel, formula, two_complement)
 
-      if Func:
-         pass
-
+      if requireFunc:
+         for j in range(len(funcs)):
+            if funcsInputs:
+               df[newChName[j]] = df[applyChName[j]].apply(funcs[i])
+            else:
+               df[newChName[j]] = df[applyChName[j]].apply(funcs[i], args = [k for k in funcsInputs])
 
       switchtimes= split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd, conditionExist)
       finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
