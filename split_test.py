@@ -77,16 +77,22 @@ def mergeTable(df, switchtimes, ahead, behind, plotlist):
 
 # convert 2 complement value in decimal to decimal with sign
 
+##################################
+### Obsolete
+
 # function to modify data by adding a column by modifying the existing column with a fomula input in text
-def modifyData(df, column, formula, two_complement=False):
-   df['new'] = df[column]
-   
-   if two_complement:
-      #change df['new'] to integer type
-      df['new'] = df['new'].astype('int')
-      df['new'] = df['new'].apply(twos_complement, args=(16,))
-   df['new'] = eval('df.new'+formula)
-   return df.new
+# def modifyData(df, column, formula, two_complement=False):
+#    df['new'] = df[column]
+#
+#    if two_complement:
+#       #change df['new'] to integer type
+#       df['new'] = df['new'].astype('int')
+#       df['new'] = df['new'].apply(two_complement, args=(16,))
+#    df['new'] = eval('df.new'+formula)
+#    return df.new
+#################################
+
+
 
 #function to read the below parameters from a file in yml format 
 def readyml():
@@ -95,10 +101,11 @@ def readyml():
       configData = yaml.safe_load(file)
    return configData
 
-
-def convertRes(input, Res = 0.5):
-   Out = input * Res
-   return Out
+### Obsolete (Replaced by RequireFunc features)
+# def convertRes(input, Res = 0.5):
+#    Out = input * Res
+#    return Out
+### Obsolete (Replaced by RequireFunc features)
 
 def main():
    configData = readyml()
@@ -130,22 +137,27 @@ def main():
    requireFunc = configData['function']['requireFunc']
    applyChName = configData['function']['applyChName']
    newChName = configData['function']['newChName']
-   funcs = configData['function']['funcs']
+   funcs = [getattr(CommonUtil, i) for i in configData['function']['funcs']]
    funcsInputs = configData['function']['funcsInput']
 
    filepath, filelocation, filename = getfile(multiFileSupport)
    for i in range(len(filepath)):
       df=pd.read_table(filepath[i], low_memory=False)
 
-      if requireConversion:
-         df[newChannelName] = modifyData(df, conversionChannel, formula, two_complement)
+# ### Obsolete (Replaced by RequireFunc features)
+#       if requireConversion:
+#          df[newChannelName] = modifyData(df, conversionChannel, formula, two_complement)
+# ### Obsolete (Replaced by RequireFunc features)
 
       if requireFunc:
          for j in range(len(funcs)):
-            if funcsInputs:
-               df[newChName[j]] = df[applyChName[j]].apply(funcs[i])
+            if not funcsInputs[j]:
+               df[newChName[j]] = funcs[j](df[applyChName[j]])
             else:
-               df[newChName[j]] = df[applyChName[j]].apply(funcs[i], args = [k for k in funcsInputs])
+               # df[newChName[j]] = funcs[j](df[applyChName[j]], funcsInputs[j])
+               df[newChName[j]] = df[applyChName[j]].apply(funcs[j], args=(4,))
+
+
 
       switchtimes= split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd, conditionExist)
       finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)

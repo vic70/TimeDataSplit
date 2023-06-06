@@ -22,7 +22,7 @@ condition:
 # This section defines any data conversion that needs to be applied
 #########################################################
 conversion:
-  requireConversion: true  # Whether to apply a data conversion
+  requireConversion: false  # Whether to apply a data conversion
   conversionChannel: BHG2_ADC_PORT_BF_CAL  # The channel to convert
   newChannelName: Cap sense (V)  # The name of the new channel after conversion
   formula: '*10/32767'  # The formula to use for the conversion
@@ -30,19 +30,23 @@ conversion:
 #########################################################
 
 function:
-  requireFunc: false
+  requireFunc: true
   applyChName:
-    - ENC_POS_BHG2_Z
-    - ENC_POS_BHG2_BF_VCM
+#    - ENC_POS_BHG2_Z
+#    - ENC_POS_BHG2_BF_VCM
+    - smple
   newChName:
-    - ENC_POS_BHG2_Z
-    - ENC_POS_BHG2_BF_VCM
+#    - ENC_POS_BHG2_Z
+#    - ENC_POS_BHG2_BF_VCM
+    - smple
   funcs:
-    - convertRes
-    - convertRes
+#    - convertRes
+#    - convertRes
+    - ADC_convert
   funcsInput:
-    - 0.5
-    - 0.1
+#    - 0.5
+#    - 0.1
+    - 1
 
 # This section defines the channels to plot
 plotChannel:
