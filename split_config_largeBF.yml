@@ -19,33 +19,23 @@ condition:
   conditionalChannel: CMD_POS_BHG2_Z  # The channel to use for the conditional filter
   conditionValue: '<-70000'  # Only consider to split signal if split mode match AND conditional channel match the value
 
-# This section defines any data conversion that needs to be applied
-#########################################################
-conversion:
-  requireConversion: false  # Whether to apply a data conversion
-  conversionChannel: BHG2_ADC_PORT_BF_CAL  # The channel to convert
-  newChannelName: Cap sense (V)  # The name of the new channel after conversion
-  formula: '*10/32767'  # The formula to use for the conversion
-  two_complement: true  # Whether to use two's complement for the conversion, suitable for ADC logging 
-#########################################################
-
 function:
   requireFunc: true
   applyChName:
-#    - ENC_POS_BHG2_Z
-#    - ENC_POS_BHG2_BF_VCM
-    - smple
+    - ENC_POS_BHG2_Z
+    - ENC_POS_BHG2_BF_VCM
+    - BHG2_ADC_PORT_BF_CAL
   newChName:
-#    - ENC_POS_BHG2_Z
-#    - ENC_POS_BHG2_BF_VCM
-    - smple
+    - ENC_POS_BHG2_Z
+    - ENC_POS_BHG2_BF_VCM
+    - BHG2_ADC_PORT_BF_CAL
   funcs:
-#    - convertRes
-#    - convertRes
+    - convertRes
+    - convertRes
     - ADC_convert
   funcsInput:
-#    - 0.5
-#    - 0.1
+    - 0.5
+    - 0.1
     - 1
 
 # This section defines the channels to plot

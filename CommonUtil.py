@@ -1,11 +1,9 @@
-def twos_complement(input_value, num_bits):
+def ADC_convert(input, factor = 10, num_bits = 16):
+    input_int = input.astype(int)
     mask = 2 ** (num_bits - 1)
-    return -(input_value & mask) + (input_value & ~mask)
-
-def ADC_convert(input, factor = 0.3, num_bits = 8):
-    input_int = int(input)
-    mask = 2 ** (num_bits - 1)
-    out = -(input_int & mask) + (input_int & ~mask) * factor /32767
+    a = -(input_int & mask)
+    b = (input_int & ~mask)
+    out = (a + b) * factor
     return out
 
 def convertRes(input, Res = 0.5):
