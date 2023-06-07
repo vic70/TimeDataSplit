@@ -14,7 +14,7 @@ import CommonUtil
 #import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import filedialog
-# import xml.etree.ElementTree as ET
+import plotly.express as px
 import yaml
 # Create GUI to get file
 
@@ -44,24 +44,13 @@ def getfile(multi = False,title= "Select file",filetypes = [(("all files","*.*")
       filename =  os.path.split(filepath)[1]
       return filepath, filelocation, filename
 
-# find the interval to be split
-def split_intervals(df, channelmode, splitmode, conditionalChannel='', conditionValue='', splitAtEnd=True, conditionExist=False):
-   
-   #splitAtEnd get the time when the channel switch from splitmode to other mode
-   if splitAtEnd:
-      df['Channel_Switch']= np.logical_and((df[channelmode].shift(-1) != df[channelmode]) , df[channelmode]== splitmode)
-   
-   #splitAtEnd get the time when the channel switch from other modes to split mode
-   else:
-      df['Channel_Switch']= np.logical_and((df[channelmode].shift(-1) != df[channelmode]) , df[channelmode].shift(-1)== splitmode)   
-   
-   #add condition to the split
-   if conditionExist:
-      df['Channel_Switch']= np.logical_and(df['Channel_Switch'],eval('df[conditionalChannel]'+conditionValue ) )   
-   
-   switchtimes = np.array(df.loc[df['Channel_Switch']]['sample'])
+#function to read the below parameters from a file in yml format
+def readyml():
+   filepath, filelocation, filename = getfile(title= "Select yml config",filetypes = [(("yaml file","*.yml"))])
+   with open(filepath, 'r') as file:
+      configData = yaml.safe_load(file)
+   return configData
 
-   return switchtimes
 
 #merge different segments into same table
 def mergeTable(df, switchtimes, ahead, behind, plotlist):
@@ -75,15 +64,24 @@ def mergeTable(df, switchtimes, ahead, behind, plotlist):
          tableMerge=pd.concat([tableMerge,tableSlice], axis=1)
    return tableMerge
 
-# convert 2 complement value in decimal to decimal with sign
+# find the interval to be split
+def split_intervals(df, channelmode, splitmode, conditionalChannel='', conditionValue='', splitAtEnd=True,
+                    conditionExist=False):
+    # splitAtEnd get the time when the channel switch from splitmode to other mode
+    if splitAtEnd:
+        df['Channel_Switch'] = np.logical_and((df[channelmode].shift(-1) != df[channelmode]),
+                                              df[channelmode] == splitmode)
+    # splitAtEnd get the time when the channel switch from other modes to split mode
+    else:
+        df['Channel_Switch'] = np.logical_and((df[channelmode].shift(-1) != df[channelmode]),
+                                              df[channelmode].shift(-1) == splitmode)
+        # add condition to the split
+    if conditionExist:
+        df['Channel_Switch'] = np.logical_and(df['Channel_Switch'], eval('df[conditionalChannel]' + conditionValue))
 
+    switchtimes = np.array(df.loc[df['Channel_Switch']]['sample'])
 
-#function to read the below parameters from a file in yml format 
-def readyml():
-   filepath, filelocation, filename = getfile(title= "Select yml config",filetypes = [(("yaml file","*.yml"))])
-   with open(filepath, 'r') as file:
-      configData = yaml.safe_load(file)
-   return configData
+    return switchtimes
 
 def main():
    configData = readyml()
@@ -102,12 +100,6 @@ def main():
    conditionalChannel = configData['condition']['conditionalChannel']
    conditionValue = configData['condition']['conditionValue']
 
-   # requireConversion = configData['conversion']['requireConversion']
-   # conversionChannel = configData['conversion']['conversionChannel']
-   # newChannelName = configData['conversion']['newChannelName']
-   # formula = configData['conversion']['formula']
-   # two_complement = configData['conversion']['two_complement']
-
    plotlist = configData['plotChannel']['plotlist']
 
    multiFileSupport = configData['multiFileSupport']['Input']
@@ -119,19 +111,45 @@ def main():
    funcsInputs = configData['function']['funcsInput']
 
    filepath, filelocation, filename = getfile(multiFileSupport)
-   for i in range(len(filepath)):
-      df=pd.read_table(filepath[i], low_memory=False)
 
-      if requireFunc:
-         for j in range(len(funcs)):
-            if not funcsInputs[j]:
-               df[newChName[j]] = funcs[j](df[applyChName[j]])
-            else:
-               df[newChName[j]] = funcs[j](df[applyChName[j]], funcsInputs[j])
+   if multiFileOutput:
+      for i in range(len(filepath)):
+         df=pd.read_table(filepath[i], low_memory=False)
 
-      switchtimes= split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd, conditionExist)
-      finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
-      finalTable.to_csv(filelocation[i]+'\\'+filename[i][:-4]+'_split.csv', index=False)
+         if requireFunc:
+            for j in range(len(funcs)):
+               if not funcsInputs[j]:
+                  df[newChName[j]] = funcs[j](df[applyChName[j]])
+               else:
+                  df[newChName[j]] = funcs[j](df[applyChName[j]], funcsInputs[j])
+
+         switchtimes= split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd, conditionExist)
+
+         finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
+         finalTable.to_csv(filelocation[i]+'\\'+filename[i][:-4]+'_split.csv', index=False)
+   else:
+      for i in range(len(filepath)):
+         df = pd.read_table(filepath[i], low_memory=False)
+
+         if requireFunc:
+            for j in range(len(funcs)):
+               if not funcsInputs[j]:
+                  df[newChName[j]] = funcs[j](df[applyChName[j]])
+               else:
+                  df[newChName[j]] = funcs[j](df[applyChName[j]], funcsInputs[j])
+
+         switchtimes = split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd,
+                                       conditionExist)
+         finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
+
+         # k2 = plotlist[0]
+         # k = df[plotlist[0]]
+
+         fig = px.scatter(switchtimes, df[plotlist[0]].iloc(switchtimes))
+         fig.show()
+
+
+
 
 if __name__ == '__main__':
     main()

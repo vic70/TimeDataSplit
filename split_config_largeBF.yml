@@ -36,7 +36,7 @@ function:
   funcsInput:
     - 0.5
     - 0.1
-    - 1
+    - 0.3
 
 # This section defines the channels to plot
 plotChannel:
