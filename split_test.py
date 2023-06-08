@@ -15,6 +15,7 @@ import CommonUtil
 import tkinter as tk
 from tkinter import filedialog
 import plotly.express as px
+import plotly.graph_objects as go
 import yaml
 # Create GUI to get file
 
@@ -55,16 +56,18 @@ def readyml():
 #merge different segments into same table
 def mergeTable(df, switchtimes, ahead, behind, plotlist):
    tableMerge = pd.DataFrame()
-   sample = 8000
-   tableMerge['Time (ms)'] =  np.arange(0, ahead+behind, 1000/sample)
+   sampleRate = 8 # in kHz
+   tableMerge['Time (ms)'] =  np.arange(0, ahead+behind, sampleRate)
 
    for t in switchtimes:
-      if t > ahead*sample/1000 and t< (df.shape[0] - behind*sample/1000):  #trigger not at begining and ending
-         tableSlice=df.iloc[int(t-ahead*sample/1000):int(t+behind*sample/1000)][plotlist].add_suffix('_t='+str(t)).reset_index(drop=True)
+      if t > ahead*sampleRate and t< (df.shape[0] - behind*sampleRate):  #trigger not at begining and ending
+         df.loc[int(t-ahead*sampleRate):int(t+behind*sampleRate),'Channel_Switch'] = np.array(True)
+         tableSlice=df.iloc[int(t-ahead*sampleRate):int(t+behind*sampleRate)][plotlist].add_suffix('_t='+str(t)).reset_index(drop=True)
          tableMerge=pd.concat([tableMerge,tableSlice], axis=1)
    return tableMerge
 
 # find the interval to be split
+
 def split_intervals(df, channelmode, splitmode, conditionalChannel='', conditionValue='', splitAtEnd=True,
                     conditionExist=False):
     # splitAtEnd get the time when the channel switch from splitmode to other mode
@@ -81,7 +84,8 @@ def split_intervals(df, channelmode, splitmode, conditionalChannel='', condition
 
     switchtimes = np.array(df.loc[df['Channel_Switch']]['sample'])
 
-    return switchtimes
+
+    return switchtimes     # this is in sample unit
 
 def main():
    configData = readyml()
@@ -144,8 +148,14 @@ def main():
 
          # k2 = plotlist[0]
          # k = df[plotlist[0]]
+         tgt = df[df['Channel_Switch'] == True]
+         time = np.arange(tgt.shape[0])
 
-         fig = px.scatter(switchtimes, df[plotlist[0]].iloc(switchtimes))
+         fig1 = px.scatter(tgt[plotlist[3]], time)
+         fig2 = px.scatter(tgt[plotlist[5]], time)
+
+         fig = go.Figure(data=fig1.data + fig2.data)
+
          fig.show()
 
 

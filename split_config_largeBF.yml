@@ -41,6 +41,7 @@ function:
 # This section defines the channels to plot
 plotChannel:
   plotlist:
+    - sample
     - ENC_POS_BHG2_Z
     - DAC_BHG2_Z
     - ENC_POS_BHG2_BF_VCM
