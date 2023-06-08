@@ -17,6 +17,7 @@ from tkinter import filedialog
 import plotly.express as px
 import plotly.graph_objects as go
 import yaml
+from plotly.subplots import make_subplots
 # Create GUI to get file
 
 def getfile(multi = False,title= "Select file",filetypes = [(("all files","*.*"))], existpath=''):
@@ -87,6 +88,14 @@ def split_intervals(df, channelmode, splitmode, conditionalChannel='', condition
 
     return switchtimes     # this is in sample unit
 
+
+def create_scatter(fig, x, y, row, col):
+   fig.add_trace(go.Scatter(x=x, y=y, mode="lines", line=dict(dash='solid')),
+                 row=row,
+                 col=col
+                 )
+   return fig
+
 def main():
    configData = readyml()
 
@@ -151,12 +160,19 @@ def main():
          tgt = df[df['Channel_Switch'] == True]
          time = np.arange(tgt.shape[0])
 
-         fig1 = px.scatter(tgt[plotlist[3]], time)
-         fig2 = px.scatter(tgt[plotlist[5]], time)
 
-         fig = go.Figure(data=fig1.data + fig2.data)
+
+         fig = make_subplots(
+            rows = 3,
+            cols = 1,
+         )
+         create_scatter(fig, time, tgt[plotlist[3]],1,1 )
+         create_scatter(fig, time, tgt[plotlist[5]],2,1 )
+         create_scatter(fig, time, tgt[plotlist[7]],3, 1)
+         # Create a new Figure object and add scatter plots for each channel
 
          fig.show()
+
 
 
 
