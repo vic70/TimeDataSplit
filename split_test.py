@@ -90,7 +90,7 @@ def split_intervals(df, channelmode, splitmode, conditionalChannel='', condition
 
 
 def create_scatter(fig, x, y, row, col):
-   fig.add_trace(go.Scatter(x=x, y=y, mode="lines", line=dict(dash='solid')),
+   fig.add_trace(go.Scatter(x=x, y=y, mode="lines", line=dict(dash='solid'), name=y.name),
                  row=row,
                  col=col
                  )
@@ -155,21 +155,17 @@ def main():
                                        conditionExist)
          finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
 
-         # k2 = plotlist[0]
-         # k = df[plotlist[0]]
-         tgt = df[df['Channel_Switch'] == True]
+         tgt = df[df['Channel_Switch'] == True] # this is trimmed df with all cols
          time = np.arange(tgt.shape[0])
 
-
-
          fig = make_subplots(
-            rows = 3,
+            rows = len(plotlist),
             cols = 1,
+            shared_xaxes = "all",
+            subplot_titles = plotlist
          )
-         create_scatter(fig, time, tgt[plotlist[3]],1,1 )
-         create_scatter(fig, time, tgt[plotlist[5]],2,1 )
-         create_scatter(fig, time, tgt[plotlist[7]],3, 1)
-         # Create a new Figure object and add scatter plots for each channel
+         for k in range(len(plotlist)):
+            create_scatter(fig, time,tgt[plotlist[k]],k+1, 1)
 
          fig.show()
 
