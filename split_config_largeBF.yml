@@ -1,7 +1,7 @@
 # This section defines the split condition for the data
 multiFileSupport:
   Input: 1
-  Output: 0
+  Output: 3
 
 splitCondition:
   channelmode: GMP_OCA_PORT_20 # The channel mode for splitting the data
