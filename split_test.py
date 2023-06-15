@@ -18,6 +18,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import yaml
 from plotly.subplots import make_subplots
+
+import dash
+from dash import dcc
+from dash import html
+from dash.dependencies import Input, Output
+
 # Create GUI to get file
 
 def getfile(multi = False,title= "Select file",filetypes = [(("all files","*.*"))], existpath=''):
@@ -96,6 +102,32 @@ def create_scatter(fig, x, y, row, col):
                  )
    return fig
 
+
+def create_scatter_plot(df):
+    app = dash.Dash(__name__)
+
+    # Create dropdown options from DataFrame columns
+    dropdown_options = [{'label': col, 'value': col} for col in df.columns]
+
+    app.layout = html.Div([
+        dcc.Dropdown(
+            id='dropdown',
+            options=dropdown_options,
+            value=df.columns[0]
+        ),
+        dcc.Graph(id='scatter-plot')
+    ])
+
+    @app.callback(
+        Output('scatter-plot', 'figure'),
+        [Input('dropdown', 'value')]
+    )
+    def update_figure(selected_column):
+        fig = px.scatter(df, x=df.index, y=selected_column)
+        return fig
+
+    return app
+
 def main():
    configData = readyml()
 
@@ -158,16 +190,20 @@ def main():
          tgt = df[df['Channel_Switch'] == True] # this is trimmed df with all cols
          time = np.arange(tgt.shape[0])
 
-         fig = make_subplots(
-            rows = len(plotlist),
-            cols = 1,
-            shared_xaxes = "all",
-            subplot_titles = plotlist
-         )
-         for k in range(len(plotlist)):
-            create_scatter(fig, time,tgt[plotlist[k]],k+1, 1)
 
-         fig.show()
+      fig = create_scatter_plot(tgt)
+         
+         # fig = make_subplots(
+         #    rows = len(plotlist),
+         #    cols = 1,
+         #    shared_xaxes = "all",
+         #    subplot_titles = plotlist
+         # )
+         # for k in range(len(plotlist)):
+         #    create_scatter(fig, time,tgt[plotlist[k]],k+1, 1)
+
+      fig.run_server(debug=True)
+
 
 
 
