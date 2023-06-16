@@ -11,14 +11,20 @@ import pandas as pd
 import glob
 import os
 import CommonUtil
+#import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import filedialog
 import plotly.express as px
 import plotly.graph_objects as go
 import yaml
 from plotly.subplots import make_subplots
-from dash import Dash, dcc, html, Input, Output
-import dashboard
+
+import dash
+from dash import dcc
+from dash import html
+from dash.dependencies import Input, Output
+
+# Create GUI to get file
 
 def getfile(multi = False,title= "Select file",filetypes = [(("all files","*.*"))], existpath=''):
 
@@ -58,7 +64,7 @@ def readyml():
 def mergeTable(df, switchtimes, ahead, behind, plotlist):
    tableMerge = pd.DataFrame()
    sampleRate = 8 # in kHz
-   tableMerge['Time (ms)'] =  np.arange(0, ahead+behind, 1/sampleRate)
+   tableMerge['Time (ms)'] =  np.arange(0, ahead+behind, sampleRate)
 
    for t in switchtimes:
       if t > ahead*sampleRate and t< (df.shape[0] - behind*sampleRate):  #trigger not at begining and ending
@@ -97,9 +103,32 @@ def create_scatter(fig, x, y, row, col):
    return fig
 
 
+def create_scatter_plot(df):
+    app = dash.Dash(__name__)
+
+    # Create dropdown options from DataFrame columns
+    dropdown_options = [{'label': col, 'value': col} for col in df.columns]
+
+    app.layout = html.Div([
+        dcc.Dropdown(
+            id='dropdown',
+            options=dropdown_options,
+            value=df.columns[0]
+        ),
+        dcc.Graph(id='scatter-plot')
+    ])
+
+    @app.callback(
+        Output('scatter-plot', 'figure'),
+        [Input('dropdown', 'value')]
+    )
+    def update_figure(selected_column):
+        fig = px.scatter(df, x=df.index, y=selected_column)
+        return fig
+
+    return app
+
 def main():
-
-
    configData = readyml()
 
    multiFileInput = configData['multiFileSupport']['Input']
@@ -128,8 +157,7 @@ def main():
 
    filepath, filelocation, filename = getfile(multiFileSupport)
 
-
-   if multiFileOutput == 1:
+   if multiFileOutput:
       for i in range(len(filepath)):
          df=pd.read_table(filepath[i], low_memory=False)
 
@@ -144,34 +172,6 @@ def main():
 
          finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
          finalTable.to_csv(filelocation[i]+'\\'+filename[i][:-4]+'_split.csv', index=False)
-   elif multiFileOutput == 2:
-      for i in range(len(filepath)):
-         df = pd.read_table(filepath[i], low_memory=False)
-
-         if requireFunc:
-            for j in range(len(funcs)):
-               if not funcsInputs[j]:
-                  df[newChName[j]] = funcs[j](df[applyChName[j]])
-               else:
-                  df[newChName[j]] = funcs[j](df[applyChName[j]], funcsInputs[j])
-
-         switchtimes = split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd,
-                                       conditionExist)
-         finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
-
-         tgt = df[df['Channel_Switch'] == True] # this is trimmed df with all cols
-         time = np.arange(tgt.shape[0])
-
-         fig = make_subplots(
-            rows = len(plotlist),
-            cols = 1,
-            shared_xaxes = "all",
-            subplot_titles = plotlist
-         )
-         for k in range(len(plotlist)):
-            create_scatter(fig, time,tgt[plotlist[k]],k+1, 1)
-
-         fig.show()
    else:
       for i in range(len(filepath)):
          df = pd.read_table(filepath[i], low_memory=False)
@@ -190,16 +190,23 @@ def main():
          tgt = df[df['Channel_Switch'] == True] # this is trimmed df with all cols
          time = np.arange(tgt.shape[0])
 
-         fig = make_subplots(
-            rows = len(plotlist),
-            cols = 1,
-            shared_xaxes = "all",
-            subplot_titles = plotlist
-         )
-         for k in range(len(plotlist)):
-            create_scatter(fig, time,tgt[plotlist[k]],k+1, 1)
 
-      appRun(fig)
+      fig = create_scatter_plot(tgt)
+         
+         # fig = make_subplots(
+         #    rows = len(plotlist),
+         #    cols = 1,
+         #    shared_xaxes = "all",
+         #    subplot_titles = plotlist
+         # )
+         # for k in range(len(plotlist)):
+         #    create_scatter(fig, time,tgt[plotlist[k]],k+1, 1)
+
+      fig.run_server(debug=True)
+
+
+
+
 
 
 if __name__ == '__main__':
