@@ -17,12 +17,14 @@ from tkinter import filedialog
 import plotly.express as px
 import plotly.graph_objects as go
 import yaml
-from plotly.subplots import make_subplots
 
+from plotly.subplots import make_subplots
 import dash
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
+
+from dashing import DashApp, ScatterPlot
 
 # Create GUI to get file
 
@@ -57,6 +59,8 @@ def readyml():
    filepath, filelocation, filename = getfile(title= "Select yml config",filetypes = [(("yaml file","*.yml"))])
    with open(filepath, 'r') as file:
       configData = yaml.safe_load(file)
+   
+   
    return configData
 
 
@@ -93,40 +97,64 @@ def split_intervals(df, channelmode, splitmode, conditionalChannel='', condition
 
 
     return switchtimes     # this is in sample unit
+### deprecated
 
 
-def create_scatter(fig, x, y, row, col):
-   fig.add_trace(go.Scatter(x=x, y=y, mode="lines", line=dict(dash='solid'), name=y.name),
-                 row=row,
-                 col=col
-                 )
-   return fig
+# def create_scatter_plots(df_list):
+#     app = dash.Dash(__name__)
 
+#     # Create dropdown options from DataFrame columns
+#     dropdown_options = [{'label': f'{col}', 'value': col} for col in df_list.columns]
 
-def create_scatter_plot(df):
-    app = dash.Dash(__name__)
+#     app.layout = html.Div([
+#         dcc.Dropdown(
+#             id='dropdown',
+#             options=dropdown_options,
+#             value=(df_list.columns[0],df_list.columns[0] ),
+#             multi= True
+#         ),
+#         dcc.Graph(id='scatter-plot')
+#     ])
 
-    # Create dropdown options from DataFrame columns
-    dropdown_options = [{'label': col, 'value': col} for col in df.columns]
+#     @app.callback(
+#         Output('scatter-plot', 'figure'),
+#         [Input('dropdown', 'value')]
+#     )
+#     def update_figure(selected_cols):
+        
+#         if len(selected_cols) <= 1:
+#          return go.Figure(data=[], layout=go.Layout(title=go.layout.Title(text="Please select at two column to plot.")))
+        
+#         fig = make_subplots(specs=[[{"secondary_y": True}]])
+#         if len(selected_cols) > 1:
+#          for idx, selected_value in enumerate(selected_cols):
+#                if idx == 0:
+#                   fig.add_trace(
+#                      go.Scatter(
+#                            x=df_list.index,
+#                            y=df_list[selected_value],
+#                            name=selected_value
+#                      ),
+#                      secondary_y=False
+#                   )
 
-    app.layout = html.Div([
-        dcc.Dropdown(
-            id='dropdown',
-            options=dropdown_options,
-            value=df.columns[0]
-        ),
-        dcc.Graph(id='scatter-plot')
-    ])
+#                if idx == 1:
+#                   fig.add_trace(
+#                      go.Scatter(
+#                            x=df_list.index,
+#                            y=df_list[selected_value],
+#                            name=selected_value
+#                      ),
+#                      secondary_y=True
+#                   )
+#          fig.update_yaxes(title_text=f"<b>{selected_cols[0]}", secondary_y=False)
+#          fig.update_yaxes(title_text=f"<b>{selected_cols[1]}", secondary_y=True)
+#          fig.update_layout(title= f"Scatter Plot with {selected_cols[0]} and {selected_cols[1]} across Time (ms)")
 
-    @app.callback(
-        Output('scatter-plot', 'figure'),
-        [Input('dropdown', 'value')]
-    )
-    def update_figure(selected_column):
-        fig = px.scatter(df, x=df.index, y=selected_column)
-        return fig
+#         return fig
 
-    return app
+#     return app
+
 
 def main():
    configData = readyml()
@@ -191,18 +219,15 @@ def main():
          time = np.arange(tgt.shape[0])
 
 
-      fig = create_scatter_plot(tgt)
-         
-         # fig = make_subplots(
-         #    rows = len(plotlist),
-         #    cols = 1,
-         #    shared_xaxes = "all",
-         #    subplot_titles = plotlist
-         # )
-         # for k in range(len(plotlist)):
-         #    create_scatter(fig, time,tgt[plotlist[k]],k+1, 1)
+      app = ScatterPlot(tgt)
+      dropdown = app.create_figure()
+      app.run(dropdown)
 
-      fig.run_server(debug=True)
+
+
+
+
+
 
 
 
