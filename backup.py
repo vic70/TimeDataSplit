@@ -1,105 +1,78 @@
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import dash
-from dash import dcc
-from dash import html
-from dash.dependencies import Input, Output
-
-class DashApp:
-    def __init__(self, title):
-        self.title = title
-        self.app = dash.Dash(__name__)
-        self.app.title = self.title
-        self.figures = []
-
-    def add_figure(self, figure):
-        print('Adding figure...')
-        self.figures.append(figure)
-
-    # def run(self):
-    #     self.app.layout = html.Div([
-    #         html.H1(self.title),
-    #         *[dcc.Graph(figure=figure) for figure in self.figures]
-    #     ])
-    #     self.app.run_server(debug=True)
-
-
-class ScatterPlot(DashApp):
-    def __init__(self, df_list):
-        super().__init__(title='Scatter Plot')
-        self.df_list = df_list
-        self.dropdown_options = [{'label': f'{col}', 'value': col} for col in self.df_list.columns]
-        self.fig = make_subplots(specs=[[{"secondary_y": True}]], shared_xaxes=True)
-        self.fig.update_xaxes(title_text="Time (ms)")
-        self.fig.update_yaxes(title_text="")
-        
-
-    def create_figure(self):
-        print('Creating scatter plot...')
-        dropdown = dcc.Dropdown(
-            id='dropdown',
-            options=self.dropdown_options,
-            value=(self.df_list.columns[0], self.df_list.columns[1]),
-            multi=True
-        )
-
-
-        @self.app.callback(
-            Output('scatter-plot', 'figure'),
-            [Input('dropdown', 'value')]
-        )
-        def update_figure(selected_cols):
-            print('Updating scatter plot...')
-            if len(selected_cols) <= 1:
-                return go.Figure(data=[], layout=go.Layout(title=go.layout.Title(text="Please select at least one column to plot.")))
-
-            fig = make_subplots(specs=[[{"secondary_y": True}]], shared_xaxes=True)
-
-            if len(selected_cols) > 1:
-                for idx, selected_value in enumerate(selected_cols):
-                    if idx == 0:
-                        fig.add_trace(
-                            go.Scatter(
-                                x=self.df_list.index,
-                                y=self.df_list[selected_value],
-                                name=selected_value
-                            ),
-                            secondary_y=False
-                        )
-
-                    if idx == 1:
-                        fig.add_trace(
-                            go.Scatter(
-                                x=self.df_list.index,
-                                y=self.df_list[selected_value],
-                                name=selected_value
-                            ),
-                            secondary_y=True
-                        )
-                fig.update_yaxes(title_text=f"<b>{selected_cols[0]}", secondary_y=False)
-                fig.update_yaxes(title_text=f"<b>{selected_cols[1]}", secondary_y=True)
-                fig.update_layout(title= f"Scatter Plot with {selected_cols[0]} and {selected_cols[1]} across Time (ms)")
-                return fig
-
-        self.add_figure(self.fig)
-        return dropdown
+def getfile_gui():
+    window = tk.Tk()
     
-    def run(self, dropdown):
-        self.app.layout = html.Div([
-            html.H1(self.title),
-            dropdown,  # Add the dropdown to the layout
-            *[dcc.Graph(id='scatter-plot', figure=self.fig) for _ in range(len(self.figures))]
-        ])
-        self.app.run_server(debug=True)
+    root = tk.Tk()
+    root.withdraw()
 
+    config_file = None
+    data_file = None
 
-# class ScatterPlotApp(DashApp):
-#     def __init__(self, title, df_list):
-#         super().__init__(title)
-#         self.df_list = df_list
+    # create a tkinter window
+    window = tk.Toplevel(root)
+    window.title("Select Files")
 
-#     def create_figures(self):
-#         for col in self.df_list.columns:
-#             scatter_plot = ScatterPlot(self.df_list)
-#             scatter_plot.create_figure()
-#             self.add_figure(scatter_plot.fig)
+    # create a label for the config file
+    config_label = tk.Label(window, text="Select Config File:")
+    config_label.grid(row=0, column=0)
+
+    # create an entry widget for the config file
+    config_entry = tk.Entry(window, width=50)
+    config_entry.grid(row=0, column=1)
+
+    # create a button to select the config file
+    def select_config_file():
+        config_file = filedialog.askopenfilename(initialdir="__FILE__", title="Select yml config",
+                                                 filetypes=[(("yaml file", "*.yml"))])
+        config_entry.delete(0, tk.END)
+        config_entry.insert(0, config_file)
+
+    config_button = tk.Button(window, text="Select", command=select_config_file)
+    config_button.grid(row=0, column=2)
+
+    # create a label for the data file
+    data_label = tk.Label(window, text="Select Data File(s):")
+    data_label.grid(row=1, column=0)
+
+    # create an entry widget for the data file(s)
+    data_entry = tk.Entry(window, width=50)
+    data_entry.grid(row=1, column=1)
+
+    # create a button to select the data file(s)
+    def select_data_file():
+        if multi_var.get():
+            data_file = filedialog.askopenfilenames(initialdir="__FILE__", title="Select data log",
+                                                    filetypes=[(("text file", "*.txt"))])
+        else:
+            data_file = filedialog.askopenfilename(initialdir="__FILE__", title="Select data log",
+                                                    filetypes=[(("text file", "*.txt"))])
+        data_entry.delete(0, tk.END)
+        data_entry.insert(0, data_file)
+
+    data_button = tk.Button(window, text="Select", command=select_data_file)
+    data_button.grid(row=1, column=2)
+
+    # create a checkbox to enable multi-file selection
+    multi_var = tk.BooleanVar()
+    multi_checkbox = tk.Checkbutton(window, text="Select Multiple Files", variable=multi_var)
+    multi_checkbox.grid(row=2, column=1)
+    
+    def ok_button():
+        nonlocal config_file, data_file
+        config_file = config_entry.get()
+        data_file = data_entry.get()
+        if config_file == '' or data_file == '':
+            # display an error message if either file has not been selected
+            error_label = tk.Label(window, text="Please select both the config file and data file(s).")
+            error_label.grid(row=3, column=1)
+            return None, None  # return a tuple of None values
+        else:
+            window.destroy()
+
+    
+    # create an OK button to close the window and return the selected files
+    ok_button = tk.Button(window, text="OK", command=ok_button)
+    ok_button.grid(row=3, column=1)
+
+    # display the window
+    window.mainloop()
+    return config_file, data_file

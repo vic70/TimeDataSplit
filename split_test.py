@@ -11,9 +11,6 @@ import pandas as pd
 import glob
 import os
 import CommonUtil
-#import matplotlib.pyplot as plt
-import tkinter as tk
-from tkinter import filedialog
 import plotly.express as px
 import plotly.graph_objects as go
 import yaml
@@ -23,45 +20,25 @@ import dash
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
-
+from CommonClass import Config, FileSelector
 from dashing import DashApp, ScatterPlot
 
-# Create GUI to get file
+def readyml(config_file):
+    with open(config_file, 'r') as file:
+        configData = yaml.safe_load(file)
+    return configData
 
-def getfile(multi = False,title= "Select file",filetypes = [(("all files","*.*"))], existpath=''):
-
-   if multi:
-      if existpath == '':
-         root = tk.Tk()
-         root.title("Split File")
-         filepath = filedialog.askopenfilenames(initialdir = "__FILE__" ,title = title, filetypes = filetypes)
-         root.destroy()
-      else:
-         filepath = existpath
-
+def file_split(filepath):          
+   if len(filepath) > 1:
+         filepath = filepath
+         filelocation =  os.path.split(filepath)[0]
+         filename =  os.path.split(filepath)[1]
+         return filepath, filelocation, filename
+   else:
+      filepath = filepath
       filelocation =  [os.path.split(filepath[i])[0] for i in range(len(filepath))]
       filename =  [os.path.split(filepath[i])[1] for i in range(len(filepath))]
-      return filepath, filelocation, filename
-   else:
-      if existpath == '':
-         root = tk.Tk()
-         root.title("Split File")
-         filepath = filedialog.askopenfilename(initialdir = "__FILE__" ,title = title, filetypes = filetypes)
-         root.destroy()
-      else:
-         filepath = existpath
-      filelocation =  os.path.split(filepath)[0]
-      filename =  os.path.split(filepath)[1]
-      return filepath, filelocation, filename
-
-#function to read the below parameters from a file in yml format
-def readyml():
-   filepath, filelocation, filename = getfile(title= "Select yml config",filetypes = [(("yaml file","*.yml"))])
-   with open(filepath, 'r') as file:
-      configData = yaml.safe_load(file)
-   
-   
-   return configData
+      return filepath, filelocation, filename   
 
 
 #merge different segments into same table
@@ -97,141 +74,54 @@ def split_intervals(df, channelmode, splitmode, conditionalChannel='', condition
 
 
     return switchtimes     # this is in sample unit
-### deprecated
-
-
-# def create_scatter_plots(df_list):
-#     app = dash.Dash(__name__)
-
-#     # Create dropdown options from DataFrame columns
-#     dropdown_options = [{'label': f'{col}', 'value': col} for col in df_list.columns]
-
-#     app.layout = html.Div([
-#         dcc.Dropdown(
-#             id='dropdown',
-#             options=dropdown_options,
-#             value=(df_list.columns[0],df_list.columns[0] ),
-#             multi= True
-#         ),
-#         dcc.Graph(id='scatter-plot')
-#     ])
-
-#     @app.callback(
-#         Output('scatter-plot', 'figure'),
-#         [Input('dropdown', 'value')]
-#     )
-#     def update_figure(selected_cols):
-        
-#         if len(selected_cols) <= 1:
-#          return go.Figure(data=[], layout=go.Layout(title=go.layout.Title(text="Please select at two column to plot.")))
-        
-#         fig = make_subplots(specs=[[{"secondary_y": True}]])
-#         if len(selected_cols) > 1:
-#          for idx, selected_value in enumerate(selected_cols):
-#                if idx == 0:
-#                   fig.add_trace(
-#                      go.Scatter(
-#                            x=df_list.index,
-#                            y=df_list[selected_value],
-#                            name=selected_value
-#                      ),
-#                      secondary_y=False
-#                   )
-
-#                if idx == 1:
-#                   fig.add_trace(
-#                      go.Scatter(
-#                            x=df_list.index,
-#                            y=df_list[selected_value],
-#                            name=selected_value
-#                      ),
-#                      secondary_y=True
-#                   )
-#          fig.update_yaxes(title_text=f"<b>{selected_cols[0]}", secondary_y=False)
-#          fig.update_yaxes(title_text=f"<b>{selected_cols[1]}", secondary_y=True)
-#          fig.update_layout(title= f"Scatter Plot with {selected_cols[0]} and {selected_cols[1]} across Time (ms)")
-
-#         return fig
-
-#     return app
 
 
 def main():
-   configData = readyml()
+   file_selector = FileSelector()
+   file_selector.create_ui()
+   config_file, data_files = file_selector.get_files()
 
-   multiFileInput = configData['multiFileSupport']['Input']
-   multiFileOutput = configData['multiFileSupport']['Output']
+   config = Config(readyml(config_file))
+   filepath, filelocation, filename = file_split(data_files)
 
-   channelmode = configData['splitCondition']['channelmode']
-   splitmode = configData['splitCondition']['splitmode']
-   splitAtEnd = configData['splitCondition']['splitAtEnd']
-
-   ahead = configData['data_range']['ahead']
-   behind = configData['data_range']['behind']
-
-   conditionExist = configData['condition']['conditionExist']
-   conditionalChannel = configData['condition']['conditionalChannel']
-   conditionValue = configData['condition']['conditionValue']
-
-   plotlist = configData['plotChannel']['plotlist']
-
-   multiFileSupport = configData['multiFileSupport']['Input']
-
-   requireFunc = configData['function']['requireFunc']
-   applyChName = configData['function']['applyChName']
-   newChName = configData['function']['newChName']
-   funcs = [getattr(CommonUtil, i) for i in configData['function']['funcs']]
-   funcsInputs = configData['function']['funcsInput']
-
-   filepath, filelocation, filename = getfile(multiFileSupport)
-
-   if multiFileOutput:
+   if not isinstance(filepath, str):
       for i in range(len(filepath)):
          df=pd.read_table(filepath[i], low_memory=False)
 
-         if requireFunc:
-            for j in range(len(funcs)):
-               if not funcsInputs[j]:
-                  df[newChName[j]] = funcs[j](df[applyChName[j]])
+         if config.requireFunc:
+            for j in range(len(config.funcs)):
+               if not config.funcsInputs[j]:
+                  df[config.newChName[j]] = config.funcs[j](df[config.applyChName[j]])
                else:
-                  df[newChName[j]] = funcs[j](df[applyChName[j]], funcsInputs[j])
+                  df[config.newChName[j]] = config.funcs[j](df[config.applyChName[j]], config.funcsInputs[j])
 
-         switchtimes= split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd, conditionExist)
+         switchtimes= split_intervals(df, config.channelmode, config.splitmode, 
+                                      config.conditionalChannel, config.conditionValue, config.splitAtEnd, 
+                                      config.conditionExist)
 
-         finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
+         finalTable = mergeTable(df, switchtimes, config.ahead, config.behind, config.plotlist)
          finalTable.to_csv(filelocation[i]+'\\'+filename[i][:-4]+'_split.csv', index=False)
    else:
       for i in range(len(filepath)):
-         df = pd.read_table(filepath[i], low_memory=False)
+         df = pd.read_table(filepath, low_memory=False)
 
-         if requireFunc:
-            for j in range(len(funcs)):
-               if not funcsInputs[j]:
-                  df[newChName[j]] = funcs[j](df[applyChName[j]])
+         if config.requireFunc:
+            for j in range(len(config.funcs)):
+               if not config.funcsInputs[j]:
+                  df[config.newChName[j]] = config.funcs[j](df[config.applyChName[j]])
                else:
-                  df[newChName[j]] = funcs[j](df[applyChName[j]], funcsInputs[j])
+                  df[config.newChName[j]] = config.funcs[j](df[config.applyChName[j]], config.funcsInputs[j])
 
-         switchtimes = split_intervals(df, channelmode, splitmode, conditionalChannel, conditionValue, splitAtEnd,
-                                       conditionExist)
-         finalTable = mergeTable(df, switchtimes, ahead, behind, plotlist)
+         switchtimes = split_intervals(df, config.channelmode, config.splitmode, config.conditionalChannel, 
+                                       config.conditionValue, config.splitAtEnd,
+                                       config.conditionExist)
+         finalTable = mergeTable(df, switchtimes, config.ahead, config.behind, config.plotlist)
 
          tgt = df[df['Channel_Switch'] == True] # this is trimmed df with all cols
-         time = np.arange(tgt.shape[0])
-
 
       app = ScatterPlot(tgt)
       dropdown = app.create_figure()
       app.run(dropdown)
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
